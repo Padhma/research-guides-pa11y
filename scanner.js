@@ -10,12 +10,12 @@
     'image-no-alt': { 
         title:'Images Missing Alt Attribute', 
         plain:'These images have no alt attribute at all. Every image must have alt="" (if decorative) or descriptive alt text.', 
-        howToFix:'In LibGuides editor: Click image → Properties → Add alt text describing the image, or use alt="" if purely decorative.', 
+        howToFix:'In LibGuides rich text editor: Click image → Properties → Add alt text describing the image, or use alt="" if purely decorative.', 
         priority:'violation', canFix:true},
     'image-alt-quality': {
         title:'Alt Text Quality Issues', 
         plain:'Alt text contains problematic patterns: starts with phrases like "image of", is a filename, too long, or all caps.', 
-        howToFix:'Revise alt text. Remove leading phrases like "image of". Keep under 250 characters. You can use the <a href="https://chatgpt.com/g/g-t8ueMpwjg-wolverine-describer" target="_blank" rel="noopener" aria-label="Wolverine Describer (opens in new tab)">Wolverine Describer</a> to generate accessible alt text.',
+        howToFix:'Revise alt text. Keep under 250 characters. You can use the <a href="https://chatgpt.com/g/g-t8ueMpwjg-wolverine-describer" target="_blank" rel="noopener" aria-label="Wolverine Describer (opens in new tab)">Wolverine Describer</a> to generate accessible alt text. If you run into usage limits, the <a href="https://www.w3.org/WAI/tutorials/images/" target="_blank" rel="noopener" aria-label="W3C Images Tutorial (opens in new tab)">W3C Images Tutorial</a> provides clear guidance for writing effective image descriptions.',
         priority:'best-practice', canFix:true},
     'link-url-only-text': {
         title:'Links Use URLs as Text', 
@@ -32,25 +32,15 @@
         plain:'This heading contains only an image. Screen readers treat this as an empty heading because they can\'t read the image as a heading.', 
         howToFix:'In LibGuides editor: Add text inside the heading alongside or instead of the image. Or move the image outside the heading tag entirely.', 
         priority:'violation', canFix:true},
-    'empty-heading-whitespace': {
+    'empty-heading-libguides-box': {
         title:'Heading is Completely Empty', 
         plain:'This heading has no text at all - it\'s completely empty or contains only whitespace.', 
         howToFix:'In LibGuides editor: Delete this heading or add descriptive text to it.', 
-        priority:'violation', canFix:true},
-    'empty-heading-libguides-box': {
-        title:'Empty LibGuides Box Title', 
-        plain:'This looks like a LibGuides box title heading. LibGuides sometimes creates empty headings automatically when a box title is missing.', 
-        howToFix:'In LibGuides editor: Edit the box → Add a title in the "Box Title" field, or change the box type to "No Heading" in box settings.', 
         priority:'violation', canFix:true},
     'heading-order': {
         title:'Heading Structure Problems', 
         plain:'Headings should go in order (H1 → H2 → H3), not skip levels.', 
         howToFix:'Change heading level in editor to correct sequence.', 
-        priority:'warning', canFix:true},
-    'page-has-heading-one': {
-        title:'Missing Main Page Title (H1)', 
-        plain:'Pages should have one H1 heading that describes the main content.', 
-        howToFix:'Check that your page title is set. Edit Page → Page Title field.', 
         priority:'warning', canFix:true},
     'heading-with-link': {
         title:'Headings Used Entirely as Links',
@@ -85,7 +75,7 @@
     'list': {
         title:'Improperly Structured List', 
         plain:'This list has structural problems - likely extra tags, nested elements, or formatting copied from Microsoft Word or Google Docs that breaks the list structure for screen readers.', 
-        howToFix:'In LibGuides editor: (1) Delete the problematic list, (2) Recreate it using the list button in the toolbar (bullet or numbered list icon), (3) Type or paste content as plain text, then format. DO NOT copy formatted lists directly from Word/Docs. If you must paste from Word: paste into Notepad first to strip formatting, then paste into LibGuides.', 
+        howToFix:'In LibGuides rich text editor: (1) Delete the problematic list, (2) Recreate it using the list button in the toolbar (bullet or numbered list icon), (3) Type or paste content as plain text, then format. DO NOT copy formatted lists directly from Word/Docs. If you must paste from Word: paste into Notepad first to strip formatting, then paste into LibGuides. (4) Use the remove format option in the editor window and it will strip any styling.', 
         priority:'violation', canFix: true},
     'frame-title': {
         title: 'Embedded Content Missing Labels',
@@ -104,7 +94,7 @@
     'th-has-data-cells': {
         title: 'Table Headers Not Marked as Headers',
         plain: 'This table has regular cells (&lt;td&gt;) for headers instead of proper header cells (&lt;th&gt;). Screen readers cannot identify which cells are headers, making the table incomprehensible.',
-        howToFix: 'In LibGuides editor: Right click the table -> Select Table Properties -> Use the table toolbar to mark cells as headers . Or rebuild the table using the table tool and designate the first row/column as headers. All column and row headers must use &lt;th&gt; tags.',
+        howToFix: 'In LibGuides editor: Right-click the table → Select "Table Properties" → Click on the header row/column → Use the toolbar to convert cells to headers. At minimum, your first row OR first column (or both) must use &lt;th&gt; tags to label what each column/row represents.',
         priority: 'violation',
         canFix: true
     },
@@ -118,7 +108,7 @@
     'link-new-window': {
         title: 'Links Open in New Window Without Warning', 
         plain: 'These links open in a new window or tab (target="_blank") but don\'t warn users. This is disorienting for screen reader users and people with cognitive disabilities who may not realize they\'ve left the current page.',
-        howToFix: 'In LibGuides editor: For links that open in new windows, add text like "(opens in new window)" or "(opens in new tab)" to the link text. Example: "View Database (opens in new window)". Or add a visual icon that indicates external links. Best Practice: Avoid opening links in new windows unless necessary.',
+        howToFix: 'In LibGuides rich text editor: For links that open in new windows, add text like "(opens in new window)" or "(opens in new tab)" to the link text. Example: "View Database (opens in new window)". Or add a visual icon that indicates external links. Best Practice: Avoid opening links in new windows unless necessary.',
         priority: 'warning', 
         canFix: true
     },
@@ -152,8 +142,8 @@
     },
     'layout-table': {
       title:'Table Used for Page Layout', 
-      plain:'This table appears to be used for visual layout (arranging content in columns) rather than displaying actual data. Layout tables can cause navigation problems for screen reader users and are not recommended in modern HTML.',
-      howToFix:'In LibGuides editor: Replace the layout table with LibGuides\' built-in column features or boxes. If you must keep the table for layout, add role="presentation" to the table tag in HTML view. Example: &lt;table role="presentation"&gt;. Better solution: rebuild the layout using LibGuides boxes arranged side-by-side instead of tables.',
+      plain:'This table appears to be used for visual layout (arranging content in columns) rather than displaying actual data. Layout tables can cause navigation problems for screen reader users and often causes display issues on mobile devices.',
+      howToFix:'In LibGuides rich text editor: Replace the layout table with LibGuides\' built-in column features or content boxes. Tables should be reserved only for presenting structured data. Better solution: rebuild the layout using LibGuides boxes arranged side-by-side instead of tables.',
       priority:'warning', 
       canFix:true
     }
@@ -550,7 +540,7 @@
         try {
           await new Promise(r => setTimeout(r, Math.random() * 100));
           axeResults = await axe.run(container, {runOnly: ['wcag2a', 'wcag2aa', 'best-practice'], resultTypes: ['violations']});
-          axeResults.violations = axeResults.violations.filter(v => v.id !== 'empty-heading' && v.id !== 'image-alt' && v.id !== 'frame-title');
+          axeResults.violations = axeResults.violations.filter(v => v.id !== 'empty-heading' && v.id !== 'image-alt' && v.id !== 'frame-title' && v.id !== 'page-has-heading-one');
         } catch (axeError) {console.warn('Axe error on', pages[i].url);}
         
         results.push({page: pages[i], violations: [...axeResults.violations, ...runCustomChecks(container)]});
@@ -580,10 +570,7 @@
       <div id="a11y-resizer" title="Drag to resize sidebar"></div>
       <div role="banner" id="a11y-header" style="background:#00274c;color:white;padding:20px;border-bottom:3px solid #ffcb05;transition:opacity 0.3s ease;font-family:'Lexend',sans-serif;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-          <div style="display:flex;align-items:center;gap:8px;flex:1;">
-            <h2 style="margin:0;font-size:20px;color:#ffffff;font-family:'Lexend',sans-serif;">🔍 LibGuides A11y Insights</h2>
-            <a href="https://padhma.github.io/libguides-a11y-insights/" target="_blank" rel="noopener" title="View documentation and learn more about this tool" style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;border:2px solid #ffcb05;color:#ffcb05;text-decoration:none;font-size:12px;font-weight:bold;font-family:serif;transition:all 0.2s;" onmouseover="this.style.background='#ffcb05';this.style.color='#00274c';" onmouseout="this.style.background='transparent';this.style.color='#ffcb05';">i</a>
-          </div>
+          <h2 style="margin:0;font-size:20px;flex:1;color:#ffffff;font-family:'Lexend',sans-serif;">🔍 LibGuides A11y Insights</h2>
           <button id="scan-mode-toggle" style="background:#ffcb05;border-radius:6px;padding:8px 12px;color:#00274C;font-weight:600;font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Lexend',sans-serif;" title="Scan all pages in this guide">Show All Pages</button>
           <button id="a11y-close-btn" style="background:none;border:2px solid #ffcb05;border-radius:50%;width:40px;height:40px;line-height:1;color:#ffcb05;font-weight:bold;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;" title="Close scanner" aria-label="Close">✕</button>
         </div>
@@ -668,7 +655,8 @@
             && v.id !== 'image-alt'
             && v.id !== 'frame-title'
             && v.id !== 'th-has-data-cells'
-            && v.id !== 'label-content-name-mismatch'
+            && v.id !== 'label-content-name-mismatch' 
+            && v.id !== 'page-has-heading-one'
         );
 
         displaySinglePageResults({ violations: [...filteredAxeViolations, ...runCustomChecks(container)] });
