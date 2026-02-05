@@ -566,6 +566,7 @@
       document.head.appendChild(style);
     }
     const sidebar = document.createElement('div');
+    const TOOL_VERSION = "V1.0.0";
     sidebar.id = 'a11y-overlay';
     sidebar.style.cssText = `position:fixed;top:0;right:0;bottom:0;width:450px;background:white;z-index:999999;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,0.3);font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:slideIn 0.3s ease-out;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);`;
     sidebar.innerHTML = `
@@ -573,6 +574,8 @@
       <div role="banner" id="a11y-header" style="background:#00274c;color:white;padding:20px;border-bottom:3px solid #ffcb05;transition:opacity 0.3s ease;font-family:'Lexend',sans-serif;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
           <h2 style="margin:0;font-size:20px;flex:1;color:#ffffff;font-family:'Lexend',sans-serif;">🔍 LibGuides A11y Insights</h2>
+          <span style="font-size:13px;color:#fff;letter-spacing:0.5px;">${TOOL_VERSION}</span>
+          <button id="a11y-collapse-btn" style="background:none;border:2px solid #ffcb05;border-radius:50%;width:36px;height:36px;color:#ffcb05;font-weight:bold;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;" title="Collapse sidebar" aria-label="Collapse sidebar">▶</button>
           <button id="scan-mode-toggle" style="background:#ffcb05;border-radius:6px;padding:8px 12px;color:#00274C;font-weight:600;font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Lexend',sans-serif;" title="Scan all pages in this guide">Show All Pages</button>
           <button id="a11y-close-btn" style="background:none;border:2px solid #ffcb05;border-radius:50%;width:40px;height:40px;line-height:1;color:#ffcb05;font-weight:bold;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;" title="Close scanner" aria-label="Close">✕</button>
         </div>
@@ -580,6 +583,35 @@
       <main id="a11y-results" style="flex:1;overflow-y:auto;padding:20px;color:#333;text-align:center;font-family:'Lexend',sans-serif;">Initializing scanner...<br><br>⏳</main>
     `;
     document.body.appendChild(sidebar);
+
+    // Minimize/Maximize functionality
+    const collapseBtn = document.getElementById('a11y-collapse-btn');
+    let isMinimized = false;
+
+    // Create a tab that shows when minimized
+    const minimizedTab = document.createElement('div');
+    minimizedTab.id = 'a11y-minimized-tab';
+    minimizedTab.style.cssText = `position:fixed;top:50%;right:0;transform:translateY(-50%);background:#00274c;color:#ffcb05;padding:12px 8px;cursor:pointer;z-index:999998;border-radius:8px 0 0 8px;font-weight:bold;font-size:14px;display:none;box-shadow:-2px 0 8px rgba(0,0,0,0.3);`;
+    minimizedTab.innerHTML = '🔍<br>A11y';
+    minimizedTab.title = 'Expand A11y Scanner';
+    document.body.appendChild(minimizedTab);
+
+    collapseBtn.onclick = () => {
+      isMinimized = !isMinimized;
+      if (isMinimized) {
+        sidebar.style.transform = 'translateX(100%)';
+        minimizedTab.style.display = 'block';
+      } else {
+        sidebar.style.transform = 'translateX(0)';
+        minimizedTab.style.display = 'none';
+      }
+    };
+
+    minimizedTab.onclick = () => {
+      isMinimized = false;
+      sidebar.style.transform = 'translateX(0)';
+      minimizedTab.style.display = 'none';
+    };
 
     // Auto-close after 15 minutes of inactivity
     let inactivityTimer;
@@ -725,12 +757,23 @@
         </details>`;
     });
 
-    // Feedback form link
+    // Feedback form and homepage link
     html += `<div style="text-align:center;padding:20px;margin-top:20px;border-top:1px solid #e5e7eb;">
-      <a href="https://forms.gle/R4tf8NLJ9kbNpEDc8" target="_blank" rel="noopener" style="color:#00274c;text-decoration:underline;font-size:14px;font-family:'Lexend',sans-serif;">
-        Let us know what you think about the tool! 📝
-      </a>
-      </div>`;
+            <a href="https://padhma.github.io/libguides-a11y-insights/" 
+              target="_blank" 
+              rel="noopener"
+              aria-label="View documentation and FAQs (opens in a new tab)"
+              style="color:#00274c;text-decoration:underline;font-size:14px;font-family:'Lexend',sans-serif;">
+              View Documentation and FAQs
+            </a><br/>
+            <a href="https://forms.gle/R4tf8NLJ9kbNpEDc8" 
+              target="_blank" 
+              rel="noopener"
+              aria-label="Let us know what you think about the tool (opens in a new tab)"
+              style="color:#00274c;text-decoration:underline;font-size:14px;font-family:'Lexend',sans-serif;">
+              Let us know what you think about the tool! 📝
+            </a>
+          </div>`;
 
     document.getElementById('a11y-results').innerHTML = html;
     }
@@ -771,7 +814,7 @@
         <svg width="90" height="90" viewBox="0 0 120 120"><circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecef" stroke-width="8"/>
         <circle cx="60" cy="60" r="54" fill="none" stroke="${scoreColor}" stroke-width="8" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" transform="rotate(-90 60 60)" stroke-linecap="round"/>
         <text x="60" y="65" text-anchor="middle" font-size="28" font-weight="600" fill="${scoreColor}">${score}</text>
-        <text x="60" y="82" text-anchor="middle" font-size="11" fill="#999">/ 100</text></svg>
+        <text x="60" y="82" text-anchor="middle" font-size="14" fill="#4a4a4a">/ 100</text></svg>
         <div style="font-size:15px;font-weight:600;color:${scoreColor};margin-bottom:8px;">${scoreMessage} ${score >= 95 ? '⭐⭐⭐⭐⭐' : score >= 80 ? '⭐⭐⭐⭐' : score >= 60 ? '⭐⭐⭐' : '⭐⭐'}</div>
         <div style="font-size:13px;color:#00274C;background:#f1f3f5;padding:8px 12px;border-radius:6px;display:inline-block;">Current page • Found ${violations.length} issue${violations.length !== 1 ? "s" : ""}</div></div>`;
 
