@@ -1,6 +1,8 @@
 (function() {
   'use strict';
   
+  // Testing for build errors
+
   if (document.getElementById('a11y-overlay')) {
     alert('Scanner already running!');
     return;
