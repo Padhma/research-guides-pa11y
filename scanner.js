@@ -44,11 +44,6 @@
         plain:'Headings should go in order (H1 → H2 → H3), not skip levels.', 
         howToFix:'Change heading level in editor to correct sequence.', 
         priority:'warning', canFix:true},
-    'heading-with-link': {
-        title:'Headings Used Entirely as Links',
-        plain: 'This heading\'s entire text is a link. This can confuse screen readers - is it a heading for navigation or a clickable link?',
-        howToFix: 'In LibGuides editor: Either (1) add non-linked text to the heading, or (2) if the entire section is clickable, consider using regular text with a link instead of a heading.',
-        priority: 'warning', canFix: true},
     'label': {
         title:'Form Fields Missing Labels', 
         plain:'Search boxes and input fields need visible labels so users know what to enter. Screen readers cannot tell what an unlabeled field is for.', 
@@ -194,6 +189,7 @@
       document.head.appendChild(style);
     }
     let successCount = 0;
+
     selectors.forEach(selector => {
       try {
         document.querySelectorAll(selector).forEach(el => {
@@ -205,6 +201,25 @@
         });
       }catch(e){console.error('Could not highlight:', selector, e);}
     });
+
+    // 🔎 Only log if nothing was found
+    if(successCount === 0){
+      console.group("⚠️ Show on Page failed");
+      selectors.forEach((selector, index) => {
+        try {
+          document.querySelector(selector); // test validity
+          const count = document.querySelectorAll(selector).length;
+          console.log(`${index + 1}. ${selector}`);
+          console.log(`   → Matched ${count} element(s)`);
+        } catch(e){
+          console.log(`${index + 1}. ${selector}`);
+          console.log("   → Invalid CSS selector");
+        }
+      });
+
+      console.groupEnd();
+    }
+
     return successCount > 0;
   }
 
@@ -286,13 +301,6 @@
       return alt && (alt.startsWith('image of') || alt.startsWith('picture of') || alt.startsWith('photo of') || alt.startsWith('graphic of') || alt.startsWith('screenshot of') || alt.match(/\.(jpg|jpeg|png|gif|svg|webp|bmp)$/i) || alt.length > 250 || (alt === alt.toUpperCase() && alt.length > 10));
     });
     if(badAlt.length) violations.push({id:'image-alt-quality', impact:'moderate', help:'Alt Text Quality Issues', description:'Alt text should be concise (<250 chars), avoid phrases like "image of", and not be filenames or all caps.', nodes:badAlt.map(el=>({target:[getCssSelector(el)], html:el.outerHTML.substring(0,100), altText:el.alt}))});
-    
-    // Headings used as links
-    const headingLinks = Array.from(container.querySelectorAll('h1, h2, h3, h4, h5, h6')).filter(h => {
-        const links = h.querySelectorAll('a');
-        return links.length === 1 && h.textContent.trim() === links[0].textContent.trim();
-    });
-    if(headingLinks.length) violations.push({id: 'heading-with-link', impact: 'serious', help: 'Headings Used Entirely as Links', description: 'Headings where all text is a link can confuse screen readers about the purpose of the element.', nodes: headingLinks.map(el => ({target:[getCssSelector(el)], html:el.outerHTML.substring(0,150)}))});
 
     // Duplicate IDs - custom check to find ALL duplicates
     const allIds = {};
