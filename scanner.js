@@ -124,9 +124,9 @@
         canFix: 'partial'
     },
     'label-content-name-mismatch': {
-      title: 'Visible Label and Accessible Name Don\'t Match',
-      plain:'This element\'s visible text doesn\'t match what screen readers announce (the accessible name). For example, a button shows "Submit" but screen readers hear "Send Form". This confuses voice control users who say "click Submit" but it doesn\'t work.',
-      howToFix: 'In LibGuides editor: Make sure any aria-label or aria-labelledby matches the visible text on the element. If a button says "Search", don\'t give it aria-label="Find". Either remove the aria-label to use the visible text, or make them match exactly.',
+      title: 'Button or Link Label Mismatch',
+      plain:'A button or link on your page has conflicting labels - what you see on screen doesn\'t match what screen readers announce. This often happens with embedded widgets or custom code that adds hidden labels.',
+      howToFix: 'This issue typically occurs in embedded content (like database widgets, custom forms, or third-party tools) where the underlying code has accessibility problems. If you added custom HTML or embedded a widget, contact libguides@umich.edu for assistance. If this is standard LibGuides content you created, let us know - this shouldn\'t happen with normal LibGuides features.',
       priority:'violation', 
       canFix:true
     },
@@ -143,6 +143,20 @@
       howToFix:'In LibGuides rich text editor: Replace the layout table with LibGuides\' built-in column features or content boxes. Tables should be reserved only for presenting structured data. Better solution: rebuild the layout using LibGuides boxes arranged side-by-side instead of tables.',
       priority:'warning', 
       canFix:true
+    },
+    'aria-command-name': {
+        title: 'Interactive Element Missing Label',
+        plain: 'A button, link, or menu item is missing a label that screen readers can announce. This often occurs in embedded widgets, custom code, or third-party tools rather than standard LibGuides content.',
+        howToFix: 'This is typically a technical issue in the underlying code. If you embedded a widget, added custom HTML, or included third-party content, contact libguides@umich.edu for assistance in fixing this. Include the link to your guide and mention this specific error.',
+        priority:'violation', 
+        canFix:'partial'
+    },
+    'icon-no-text': {
+        title: 'Icon-Only Elements Without Labels',
+        plain: 'Icons (Font Awesome, glyphicons, etc.) are used in links or buttons without any text or accessible labels. Screen readers cannot tell what these buttons/links do - they just announce "link" or "button" with no description.',
+        howToFix: 'Review the technical description below for details, then examine HTML code in your guide editing view. If you are unsure how to fix this, contact your guides administrator.',
+        priority: 'violation',
+        canFix: 'partial'
     }
   };
 
@@ -199,29 +213,13 @@
             if(successCount === 1) el.scrollIntoView({behavior:'smooth', block:'center'});
           }
         });
-      }catch(e){console.error('Could not highlight:', selector, e);}
+      } catch(e) {
+          console.warn('Invalid selector:', selector, e);
+      }
     });
 
-    // 🔎 Only log if nothing was found
-    if(successCount === 0){
-      console.group("⚠️ Show on Page failed");
-      selectors.forEach((selector, index) => {
-        try {
-          document.querySelector(selector); // test validity
-          const count = document.querySelectorAll(selector).length;
-          console.log(`${index + 1}. ${selector}`);
-          console.log(`   → Matched ${count} element(s)`);
-        } catch(e){
-          console.log(`${index + 1}. ${selector}`);
-          console.log("   → Invalid CSS selector");
-        }
-      });
-
-      console.groupEnd();
-    }
-
     return successCount > 0;
-  }
+}
 
   function getCssSelector(el, skipId = false){
     // If skipId is true, don't use the ID even if it exists (for duplicate IDs)
@@ -283,6 +281,21 @@
 
   function runCustomChecks(container) {
     const violations = [];
+
+    function isUserVisible(el) {
+        // Skip LibGuides admin/edit elements - check both element and ancestors
+        if (el.id && el.id.includes('s-lg-admin-edit')) return false;
+        if (el.id && el.id.includes('s-lib-admin-edit')) return false;
+        
+        if (el.closest('.s-lg-content-edit, .s-lg-box-edit, .s-lib-box-edit, [id*="admin-edit"]') ||
+            el.className && typeof el.className === 'string' && 
+            (el.className.includes('s-lg-edit') || 
+            el.className.includes('s-lib-edit') ||
+            el.className.includes('dropdown-toggle'))) {  // Add this - admin buttons use dropdown-toggle
+            return false;
+        }
+        return true;
+    }
     
     // URL-only links
     const urlLinks = Array.from(container.querySelectorAll('a')).filter(link => {
@@ -400,7 +413,6 @@
       if (ariaLabel && visibleText && !ariaLabel.includes(visibleText) && !visibleText.includes(ariaLabel)) {
         return true;
       }
-
       return false;
     })
     if(labelMismatches.length) violations.push({id: 'label-content-name-mismatch', impact:'serious', help: 'Visible Label Does Not Match Accessible Name', description: 'The visible text and screen reader announcement don\'t match.', nodes: labelMismatches.map(el => ({target: [getCssSelector(el, true)], html: el.outerHTML.substring(0, 150)}))});
@@ -447,6 +459,75 @@
     });
     if(layoutTables.length) violations.push({id:'layout-table', impact:'moderate', help:'Table Used for Layout Instead of Data', description:'Tables should only be used for tabular data, not visual layout. Layout tables cause navigation issues.', nodes:layoutTables.map(el=>({target:[getCssSelector(el, true)], html:el.outerHTML.substring(0,150)}))});
 
+    // For heading order - store the actual element
+    const headingOrderIssues = [];
+    const headings = Array.from(container.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+    let previousLevel = 0;
+    
+    headings.forEach(h => {
+        const level = parseInt(h.tagName[1]);
+        if (previousLevel > 0 && level - previousLevel > 1) {
+            headingOrderIssues.push({
+                element: h,  // Store the actual element
+                target: [generateBetterSelector(h)],
+                html: h.outerHTML.substring(0, 150)
+            });
+        }
+        previousLevel = level;
+    });
+    
+    if (headingOrderIssues.length) {
+        violations.push({
+            id: 'heading-order',
+            impact: 'moderate',
+            help: 'Heading Structure Problems',
+            description: 'Headings should go in order (H1 → H2 → H3), not skip levels.',
+            nodes: headingOrderIssues
+        });
+    }
+
+    // Empty icon elements
+    const allIcons = Array.from(container.querySelectorAll('i[class*="fa-"], i[class*="glyphicon-"], span[class*="icon-"]'));
+    const emptyIcons = [];
+
+    allIcons.forEach(icon => {
+        const parent = icon.parentElement;
+        if (!parent) return;
+        
+        // Only check if parent is a link or button
+        if (parent.tagName !== 'A' && parent.tagName !== 'BUTTON') return;
+        
+        // Get text content excluding the icon and caret
+        const textNodes = Array.from(parent.childNodes).filter(node => {
+            if (node === icon) return false;
+            if (node.nodeType === Node.TEXT_NODE) return true;
+            if (node.nodeType === Node.ELEMENT_NODE && node.classList && node.classList.contains('caret')) return false;
+            return false;
+        });
+        const parentText = textNodes.map(n => n.textContent.trim()).join('');
+        
+        const hasText = parentText.length > 0;
+        const hasAriaLabel = parent.hasAttribute('aria-label') && parent.getAttribute('aria-label').trim().length > 0;
+        const hasAriaLabelledby = parent.hasAttribute('aria-labelledby');
+        const hasTitle = parent.hasAttribute('title') && parent.getAttribute('title').trim().length > 0;
+        
+        if (!hasText && !hasAriaLabel && !hasAriaLabelledby && !hasTitle) {
+            emptyIcons.push(parent);
+        }
+    });
+
+    if (emptyIcons.length) {
+        violations.push({
+            id: 'icon-no-text',
+            impact: 'serious',
+            help: 'Icon-Only Elements Missing Labels',
+            description: 'Icon elements used without text or labels.',
+            nodes: emptyIcons.map(el => ({
+                target: [getCssSelector(el, true)],
+                html: el.outerHTML.substring(0, 150)
+            }))
+        });
+    }
     // Empty headings
     violations.push(...checkEmptyHeadings(container));
     
@@ -689,9 +770,22 @@
         displayMultiPageResults(results);
       } else {
         const container = findLibGuidesContainer();
-        const axeResults = await axe.run(container, {runOnly: ['wcag2a', 'wcag2aa', 'best-practice'], resultTypes: ['violations']});
+
+        // HIDE ADMIN ELEMENTS BEFORE SCANNING
+        // const adminElements = container.querySelectorAll('.s-lg-content-edit, .s-lg-box-edit, .s-lib-box-edit, [class*="s-lg-edit"], [class*="s-lib-edit"]');
+        const adminElements = container.querySelectorAll('.s-lg-content-edit, .s-lg-box-edit, .s-lib-box-edit, [id*="admin-edit"], .dropdown-toggle');
+        adminElements.forEach(el => el.style.display = 'none');
+
+        const axeResults = await axe.run(container, {
+            runOnly: ['wcag2a', 'wcag2aa', 'best-practice'], 
+            resultTypes: ['violations']});
+        
+        // RESTORE ADMIN ELEMENTS
+        adminElements.forEach(el => el.style.display = '');
+
         const filteredAxeViolations = axeResults.violations.filter(v => 
             v.id !== 'empty-heading' 
+            && v.id !== 'heading-order'
             && v.id !== 'duplicate-id' 
             && v.id !== 'scope-attr-valid'
             && v.id !== 'image-alt'
@@ -784,6 +878,64 @@
           </div>`;
 
     document.getElementById('a11y-results').innerHTML = html;
+  }
+
+  function generateBetterSelector(element) {
+    // Start with the most specific: if it has a unique ID, use it
+    if (element.id && document.querySelectorAll(`#${element.id}`).length === 1) {
+        return `#${element.id}`;
+    }
+    
+    // Build a path from the element up to something unique
+    const path = [];
+    let current = element;
+    let maxDepth = 0;
+    
+    while (current && current !== document.body && maxDepth < 10) {
+        let selector = current.tagName.toLowerCase();
+        
+        // Add classes if they exist (limit to first 2 to avoid bloat)
+        if (current.className && typeof current.className === 'string') {
+            const classes = current.className.trim().split(/\s+/)
+                .filter(c => c && !c.includes('a11y-highlight')) // skip our highlight class
+                .slice(0, 2);
+            if (classes.length) {
+                selector += '.' + classes.join('.');
+            }
+        }
+        
+        // Add nth-child ONLY if there are siblings with same tag+class
+        if (current.parentElement) {
+            const siblings = Array.from(current.parentElement.children);
+            const similarSiblings = siblings.filter(sib => {
+                if (sib.tagName !== current.tagName) return false;
+                if (!current.className) return true;
+                return sib.className === current.className;
+            });
+            
+            if (similarSiblings.length > 1) {
+                const index = similarSiblings.indexOf(current);
+                selector += `:nth-of-type(${index + 1})`;
+            }
+        }
+        
+        path.unshift(selector);
+        
+        // Test if this path is unique
+        const testSelector = path.join(' > ');
+        try {
+            if (document.querySelectorAll(testSelector).length === 1) {
+                return testSelector;
+            }
+        } catch(e) {
+            // Invalid selector, keep building
+        }
+        
+        current = current.parentElement;
+        maxDepth++;
+    }
+    
+    return path.join(' > ');
     }
     
     function displaySinglePageResults(results) {
@@ -830,27 +982,41 @@
         html += `<div style="display:flex;align-items:center;justify-content:space-between;margin:20px 0 12px 0;padding-bottom:8px;border-bottom:1px solid #e5e7eb;">
             <h3 style="color:#00274c;font-size:16px;font-weight:600;margin:0;font-family:'Lexend',sans-serif;">✏️ Issues You Can Fix</h3>
             <button id="accordion-toggle-btn" type="button" style="background:#ffcb05;color:#00274c;font-weight:600;border:none;border-radius:5px;padding:6px 15px;cursor:pointer;font-size:14px;">Expand All</button></div>`;
+        
+        // Store violations globally so buttons can access them by index
+        window.a11yCurrentViolations = canFix;
 
         canFix.forEach((item, index) => {
             const v = item.violation, exp = item.explanation;
-            const color = priorityColors[exp.priority] || "#6c757d", bgColor = priorityBackgrounds[exp.priority] || "rgba(108, 117, 125, 0.04)";
-            const selectors = v.nodes.map(n => n.target[0]).join("|");
+            const color = priorityColors[exp.priority] || "#6c757d";
+            const bgColor = priorityBackgrounds[exp.priority] || "rgba(108, 117, 125, 0.04)";
+            
+            // DON'T put selectors in the HTML attribute - use index instead
             html += `<details style="background:${bgColor};padding:16px;margin:16px 0;border-radius:6px;border-left:4px solid ${color};box-shadow:0 1px 3px rgba(0,0,0,0.06);text-align:left;">
             <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;">
                 <div style="font-size:15px;font-weight:600;color:#00274c;flex:1;">${index + 1}. ${exp.title}</div>
                 <span style="background:${color};color:white;padding:3px 8px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase;">${exp.priority}</span>
             </summary>
             <div style="margin-top:14px;font-size:15px;line-height:1.6;color:#4a5568;text-align:center;">
-                <div style="background:white;padding:12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:14px;"><h5 style="margin:0 0 6px 0;font-weight:700;color:#1a2e3f;font-size:14px;">📖 What's wrong</h5><p style="margin:0;">${exp.plain}</p></div>
-                <div style="background:white;padding:12px;border:1px solid #d8e7f7;border-radius:6px;margin-bottom:14px;"><h5 style="margin:0 0 6px 0;font-weight:700;color:#1a2e3f;font-size:14px;">🔧 How to fix</h5><p style="margin:0;">${exp.howToFix}</p></div>
+                <div style="background:white;padding:12px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:14px;">
+                    <h5 style="margin:0 0 6px 0;font-weight:700;color:#1a2e3f;font-size:14px;">📖 What's wrong</h5>
+                    <p style="margin:0;">${exp.plain}</p>
+                </div>
+                <div style="background:white;padding:12px;border:1px solid #d8e7f7;border-radius:6px;margin-bottom:14px;">
+                    <h5 style="margin:0 0 6px 0;font-weight:700;color:#1a2e3f;font-size:14px;">🔧 How to fix</h5>
+                    <p style="margin:0;">${exp.howToFix}</p>
+                </div>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <button class="highlight-btn" data-selectors="${selectors}" style="background:#ffcb05;color:#00274c;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;">👁️ Show on Page</button>
-                <span style="font-size:13px;color:#666;">${v.nodes.length} affected</span>
+                    <button class="highlight-btn" data-violation-index="${index}" style="background:#ffcb05;color:#00274c;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;">👁️ Show on Page</button>
+                    <span style="font-size:13px;color:#666;">${v.nodes.length} affected</span>
                 </div>
-                <details style="margin-top:12px;"><summary style="cursor:pointer;font-size:13px;color:#666;font-weight:600;">Technical details</summary>
-                <div style="background:#fafafa;padding:10px;margin-top:6px;border-radius:4px;font-size:12px;color:#555;border:1px solid #e5e7eb;line-height:1.5;">
-                    <strong>Rule:</strong> ${v.id}<br><strong>WCAG:</strong> ${v.description}<br><strong>Element:</strong> <code style="background:#f3f4f6;padding:2px 4px;border-radius:3px;font-size:11px;">${v.nodes[0]?.target[0] || "N/A"}</code>
-                </div>
+                <details style="margin-top:12px;">
+                    <summary style="cursor:pointer;font-size:13px;color:#666;font-weight:600;">Technical details</summary>
+                    <div style="background:#fafafa;padding:10px;margin-top:6px;border-radius:4px;font-size:12px;color:#555;border:1px solid #e5e7eb;line-height:1.5;">
+                        <strong>Rule:</strong> ${v.id}<br>
+                        <strong>WCAG:</strong> ${v.description}<br>
+                        <strong>Element:</strong> <code style="background:#f3f4f6;padding:2px 4px;border-radius:3px;font-size:11px;">${v.nodes[0]?.target[0] || "N/A"}</code>
+                    </div>
                 </details>
             </div>
             </details>`;
@@ -873,40 +1039,64 @@
 
     document.getElementById("a11y-results").innerHTML = html;
 
+    // NOW attach the click handlers using the index
     setTimeout(() => {
-    const accordionBtn = document.getElementById('accordion-toggle-btn');
-    if (accordionBtn) {
-        let expanded = false;
-        accordionBtn.addEventListener('click', () => {
-        expanded = !expanded;
-        document.querySelectorAll("#a11y-results > details").forEach(d => d.open = expanded);
-        accordionBtn.textContent = expanded ? "Collapse All" : "Expand All";
-        });
-    }
-    }, 0);
-
-    document.querySelectorAll(".highlight-btn").forEach(btn => {
-    btn.onclick = function () {
-        const selectorsString = this.getAttribute("data-selectors");
-        if (!selectorsString) return;
-        const success = highlightAllElements(selectorsString.split("|").filter(Boolean));
-        if (success) {
-        this.textContent = "✓ Highlighted"; this.style.background = "#2c9a4b"; this.style.color = "white";
-        setTimeout(() => {this.textContent = "👁️ Show on Page"; this.style.background = "#ffcb05"; this.style.color = "#00274c";}, 2000);
-        } else {
-        this.textContent = "✗ Not found"; this.style.background = "#c23c3c"; this.style.color = "white";
+        const accordionBtn = document.getElementById('accordion-toggle-btn');
+        if (accordionBtn) {
+            let expanded = false;
+            accordionBtn.addEventListener('click', () => {
+            expanded = !expanded;
+            document.querySelectorAll("#a11y-results > details").forEach(d => d.open = expanded);
+            accordionBtn.textContent = expanded ? "Collapse All" : "Expand All";
+            });
         }
-    };
-    });
+        
+        document.querySelectorAll(".highlight-btn").forEach(btn => {
+            btn.onclick = function () {
+                const violationIndex = parseInt(this.getAttribute("data-violation-index"));
+                const violation = window.a11yCurrentViolations[violationIndex];
+                
+                if (!violation) {
+                    console.error('Violation not found at index:', violationIndex);
+                    return;
+                }
+                
+                // Get selectors from the stored violation
+                const selectors = violation.violation.nodes.map(n => {
+                    if (n.element) {
+                        return generateBetterSelector(n.element);
+                    }
+                    return n.target[0];
+                }).filter(Boolean);
+                
+                const success = highlightAllElements(selectors);
+                
+                if (success) {
+                    this.textContent = "✓ Highlighted";
+                    this.style.background = "#2c9a4b";
+                    this.style.color = "white";
+                    setTimeout(() => {
+                        this.textContent = "👁️ Show on Page";
+                        this.style.background = "#ffcb05";
+                        this.style.color = "#00274c";
+                    }, 2000);
+                } else {
+                    this.textContent = "✗ Not found";
+                    this.style.background = "#c23c3c";
+                    this.style.color = "white";
+                }
+            };
+        });
+    }, 0);
     }
     if(typeof axe === 'undefined'){
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.7.2/axe.min.js';
-      script.onload = initScanner;
-      script.onerror = () => alert('Failed to load axe-core. Check your internet connection.');
-      document.head.appendChild(script);
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.7.2/axe.min.js';
+        script.onload = initScanner;
+        script.onerror = () => alert('Failed to load axe-core. Check your internet connection.');
+        document.head.appendChild(script);
     } 
     else {
-      initScanner();
+        initScanner();
     }
   })();
