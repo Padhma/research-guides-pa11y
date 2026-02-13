@@ -655,7 +655,7 @@
       document.head.appendChild(style);
     }
     const sidebar = document.createElement('div');
-    const TOOL_VERSION = "V1.0.0";
+    const TOOL_VERSION = "V1.1.0";
     sidebar.id = 'a11y-overlay';
     sidebar.style.cssText = `position:fixed;top:0;right:0;bottom:0;width:450px;background:white;z-index:999999;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,0.3);font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:slideIn 0.3s ease-out;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);`;
     sidebar.innerHTML = `
