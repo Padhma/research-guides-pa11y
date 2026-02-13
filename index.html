@@ -381,7 +381,7 @@
         <div class="bookmarklet-section">
             <h3>Try It Now</h3>
             <p>Drag this button to your bookmarks bar to install:</p>
-            <a href="javascript:(function(){var s=document.createElement('script');s.src='https://padhma.github.io/libguides-a11y-insights/scanner.js?'+Date.now();document.head.appendChild(s);})();" 
+            <a href="javascript:(function(){var s=document.createElement('script');s.src='https://padhma.github.io/libguides-a11y-insights/scanner.js?v='+window.LIBGUIDES_A11Y_VERSION+'&'+Date.now();document.head.appendChild(s);})();"
                 class="bookmarklet-button"
                 onclick="alert('⚠️ Don\\'t click! DRAG this button to your bookmarks bar instead.'); return false;">
                 🔍 LibGuides A11y Insights
@@ -551,6 +551,8 @@
     </p>
 </div>
 <script>
+window.LIBGUIDES_A11Y_VERSION = "1.1.0";
+    
 function switchTab(event, tabId) {
     const tabContents = document.querySelectorAll('.tab-content');
     tabContents.forEach(content => {
@@ -565,6 +567,11 @@ function switchTab(event, tabId) {
     document.getElementById(tabId).classList.add('active');
     event.currentTarget.classList.add('active');
 }
+
+// Append version to footer
+const footerText = document.querySelector(".footer p");
+footerText.innerHTML += " • v" + window.LIBGUIDES_A11Y_VERSION;
+
 </script>
 </body>
 </html>
