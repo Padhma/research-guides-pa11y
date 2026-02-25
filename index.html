@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🔍</text></svg>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LibGuides A11y Insights</title>
+    <title>Research Guides Pa11y</title>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -362,8 +362,8 @@
 </head>
 <body>
 <div class="header">
-    <h1>LibGuides A11y Insights</h1>
-    <p>Comprehensive WCAG 2.1 AA compliance scanning for LibGuides</p>
+    <h1>Research Guides Pa11y</h1>
+    <p>Comprehensive WCAG 2.1 AA compliance scanning for research guides</p>
 </div>
 <div class="container">
     <div class="tab-navigation">
@@ -375,7 +375,7 @@
 
     <div id="about" class="tab-content active">
         <h2>About This Project</h2>
-        <p>LibGuides A11y Insights is a bookmarklet that helps LibGuide owners create accessible and inclusive guides for all users, including those who rely on screen readers and other assistive technologies.</p>
+        <p>Research Guides Pa11y is a bookmarklet that helps LibGuide owners create accessible and inclusive guides for all users, including those who rely on screen readers and other assistive technologies.</p>
         <p>Built for the University of Michigan Library, this tool helps anyone managing LibGuides quickly spot and fix accessibility issues, offering clear, actionable guidance aligned with WCAG 2.1 AA standards.</p>
 
         <div class="bookmarklet-section">
@@ -384,7 +384,7 @@
             <a href="javascript:(function(){var s=document.createElement('script');s.src='https://padhma.github.io/libguides-a11y-insights/scanner.js?v='+window.LIBGUIDES_A11Y_VERSION+'&'+Date.now();document.head.appendChild(s);})();"
                 class="bookmarklet-button"
                 onclick="alert('⚠️ Don\\'t click! DRAG this button to your bookmarks bar instead.'); return false;">
-                🔍 LibGuides A11y Insights V1.1.0
+                🔍 Research Guides Pa11y V2.1.0
             </a>
         </div>
 
@@ -410,7 +410,7 @@
             <strong>Installing the Bookmarklet</strong>
             <ol>
                 <li>Make sure your browser's bookmarks bar is visible (press <code>Ctrl+Shift+B</code> on Windows or <code>Cmd+Shift+B</code> on Mac)</li>
-                <li>Navigate to the "About" tab and find the gold button labeled "LibGuides A11y Insights"</li>
+                <li>Navigate to the "About" tab and find the gold button labeled "Research Guides Pa11y"</li>
                 <li>Click and drag this button to your bookmarks bar</li>
                 <li>The bookmarklet is now installed and ready to use</li>
             </ol>
@@ -432,7 +432,7 @@
             <span class="step-number">2</span>
             <div class="step-content">
                 <strong>Click the bookmarklet</strong>
-                <p>Simply click the "LibGuides A11y Insights" button you installed in your bookmarks bar.</p>
+                <p>Simply click the "Research Guides Pa11y" button you installed in your bookmarks bar.</p>
             </div>
         </div>
         <div class="step">
@@ -509,7 +509,7 @@
         <details class="faq-item">
             <summary class="faq-question">How accurate is this tool?</summary>
             <div class="faq-answer">
-                LibGuides A11y Insights uses the axe-core engine, which is the industry standard used by Google, Microsoft, and other major organizations. It automatically detects approximately 60% of WCAG 2.1 AA violations. Some accessibility issues—such as meaningful image descriptions, logical content order, and appropriate heading usage—still require human judgment and manual review.
+                Research Guides Pa11y uses the axe-core engine, which is the industry standard used by Google, Microsoft, and other major organizations. It automatically detects approximately 60% of WCAG 2.1 AA violations. Some accessibility issues—such as meaningful image descriptions, logical content order, and appropriate heading usage—still require human judgment and manual review.
             </div>
         </details>
         <details class="faq-item">
@@ -551,7 +551,7 @@
     </p>
 </div>
 <script>
-window.LIBGUIDES_A11Y_VERSION = "1.1.0";
+window.LIBGUIDES_A11Y_VERSION = "2.1.0";
     
 function switchTab(event, tabId) {
     const tabContents = document.querySelectorAll('.tab-content');
