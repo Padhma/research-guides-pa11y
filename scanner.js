@@ -2,7 +2,6 @@
   'use strict';
   
   // Testing for build errors
-
   if (document.getElementById('a11y-overlay')) {
     alert('Scanner already running!');
     return;
@@ -319,6 +318,16 @@
     const allIds = {};
     Array.from(container.querySelectorAll('[id]')).forEach(el => {
       const id = el.id;
+
+      // SKIP LibGuides system IDs that users can't control
+      if (id.startsWith('s-lg-') || 
+          id.startsWith('s-lib-') ||
+          id.startsWith('s-lc-') ||
+          id.includes('springshare') ||
+          id.includes('libguides')) {
+        return;
+      }
+
       if (!allIds[id]) allIds[id] = [];
       allIds[id].push(el);
     });
@@ -662,7 +671,7 @@
       <div id="a11y-resizer" title="Drag to resize sidebar"></div>
       <div role="banner" id="a11y-header" style="background:#00274c;color:white;padding:20px;border-bottom:3px solid #ffcb05;transition:opacity 0.3s ease;font-family:'Lexend',sans-serif;">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-          <h2 style="margin:0;font-size:20px;flex:1;color:#ffffff;font-family:'Lexend',sans-serif;">🔍 LibGuides A11y Insights</h2>
+          <h2 style="margin:0;font-size:20px;flex:1;color:#ffffff;font-family:'Lexend',sans-serif;">🔍 Research Guides Pa11y</h2>
           <span style="font-size:13px;color:#fff;letter-spacing:0.5px;">${TOOL_VERSION}</span>
           <button id="a11y-collapse-btn" style="background:none;border:2px solid #ffcb05;border-radius:50%;width:36px;height:36px;color:#ffcb05;font-weight:bold;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;" title="Collapse sidebar" aria-label="Collapse sidebar">▶</button>
           <button id="scan-mode-toggle" style="background:#ffcb05;border-radius:6px;padding:8px 12px;color:#00274C;font-weight:600;font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Lexend',sans-serif;" title="Scan all pages in this guide">Show All Pages</button>
@@ -802,6 +811,27 @@
     }
   }
 
+  function getFooterHTML() {
+    return `
+      <div style="text-align:center;padding:20px;margin-top:20px;border-top:1px solid #e5e7eb;font-family:'Lexend',sans-serif;">
+        <a href="https://padhma.github.io/research-guides-pa11y/" 
+          target="_blank" 
+          rel="noopener"
+          aria-label="View documentation and FAQs (opens in a new tab)"
+          style="color:#00274c;text-decoration:underline;font-size:14px;">
+          View Documentation and FAQs
+        </a><br/>
+        <a href="https://forms.gle/R4tf8NLJ9kbNpEDc8" 
+          target="_blank" 
+          rel="noopener"
+          aria-label="Let us know what you think about the tool (opens in a new tab)"
+          style="color:#00274c;text-decoration:underline;font-size:14px;">
+          Let us know what you think about the tool! 📝
+        </a>
+      </div>
+    `;
+  }
+
   function displayMultiPageResults(results) {
     if (!document.getElementById("lexend-font")) {
       const link = document.createElement("link");
@@ -859,25 +889,7 @@
         </details>`;
     });
 
-    // Feedback form and homepage link
-    html += `<div style="text-align:center;padding:20px;margin-top:20px;border-top:1px solid #e5e7eb;">
-            <a href="https://padhma.github.io/libguides-a11y-insights/" 
-              target="_blank" 
-              rel="noopener"
-              aria-label="View documentation and FAQs (opens in a new tab)"
-              style="color:#00274c;text-decoration:underline;font-size:14px;font-family:'Lexend',sans-serif;">
-              View Documentation and FAQs
-            </a><br/>
-            <a href="https://forms.gle/R4tf8NLJ9kbNpEDc8" 
-              target="_blank" 
-              rel="noopener"
-              aria-label="Let us know what you think about the tool (opens in a new tab)"
-              style="color:#00274c;text-decoration:underline;font-size:14px;font-family:'Lexend',sans-serif;">
-              Let us know what you think about the tool! 📝
-            </a>
-          </div>`;
-
-    document.getElementById('a11y-results').innerHTML = html;
+    document.getElementById('a11y-results').innerHTML = html + getFooterHTML();
   }
 
   function generateBetterSelector(element) {
@@ -958,7 +970,17 @@
             <svg width="80" height="80" viewBox="0 0 120 120" style="margin-bottom:6px;"><circle cx="60" cy="60" r="54" fill="none" stroke="#e9ecef" stroke-width="8"/><circle cx="60" cy="60" r="54" fill="none" stroke="#2c9a4b" stroke-width="8" stroke-dasharray="339.292" stroke-dashoffset="0" transform="rotate(-90 60 60)" stroke-linecap="round"/><text x="60" y="65" text-anchor="middle" font-size="26" font-weight="600" fill="#2c9a4b">100</text><text x="60" y="82" text-anchor="middle" font-size="10" fill="#999">/100</text></svg>
             <div style="font-size:15px;font-weight:600;color:#2c9a4b;margin-bottom:4px;">Excellent ⭐⭐⭐⭐⭐</div>
             <div style="font-size:12px;color:#00274C;background:#eafcef;padding:6px 10px;border-radius:5px;display:inline-block;">No issues found</div></div>
-            <div style="background:#e6f4ea;border-radius:7px;border:1.2px solid #f1f9f3;padding:20px 15px;text-align:center;"><div style="font-family:'Lexend';font-size:14px;color:#226644;">This page successfully passed all accessibility checks.</div><div style="font-family:'Lexend';font-size:12px;color:#226644;font-style:italic;">Keep up the great work!</div></div></div>`;
+            <div style="background:#e6f4ea;border-radius:7px;border:1.2px solid #f1f9f3;padding:20px 15px;text-align:center;"><div style="font-family:'Lexend';font-size:14px;color:#226644;">This page successfully passed all accessibility checks.</div><div style="font-family:'Lexend';font-size:12px;color:#226644;font-style:italic;">Keep up the great work!</div></div></div>
+            <!-- Add footer here -->
+            <div style="text-align:center;padding:20px;margin-top:20px;border-top:1px solid #e5e7eb;font-family:'Lexend',sans-serif;">
+              <a href="https://padhma.github.io/research-guides-pa11y/" target="_blank" rel="noopener" style="color:#00274c;text-decoration:underline;font-size:14px;">
+                View Documentation and FAQs
+              </a><br/>
+              <a href="https://forms.gle/R4tf8NLJ9kbNpEDc8" target="_blank" rel="noopener" style="color:#00274c;text-decoration:underline;font-size:14px;">
+                Let us know what you think about the tool! 📝
+              </a>
+            </div>
+            `;
         return;
         }
 
@@ -1020,24 +1042,23 @@
                 </details>
             </div>
             </details>`;
-        });
-    }
+        });}
 
-    if (systemIssues.length > 0) {
-    html += `<div style="margin-bottom:25px;"><h3 style="color:#6c757d;font-size:16px;margin-bottom:15px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;font-weight:600;">⚙️ System Issues</h3>`;
-    systemIssues.forEach(item => {
-        const v = item.violation, exp = item.explanation;
-        html += `<details style="background:rgba(108, 117, 125, 0.04);padding:16px;margin:16px 0;border-left:4px solid #6c757d;border-radius:6px;opacity:0.85;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-        <summary style="cursor:pointer;font-size:15px;font-weight:600;color:#495057;">${exp.title}</summary>
-        <div style="margin-top:14px;font-size:15px;line-height:1.6;color:#4a5568;"><p style="margin-bottom:12px;">${exp.plain}</p>
-            <div style="background:#f3f4f6;padding:12px;border-radius:6px;font-size:14px;color:#333;border:1px solid #e5e7eb;">${exp.howToFix}</div>
-        </div>
-        </details>`;
-    });
-    html += `</div>`;
-    }
+    // if (systemIssues.length > 0) {
+    // html += `<div style="margin-bottom:25px;"><h3 style="color:#6c757d;font-size:16px;margin-bottom:15px;padding-bottom:8px;border-bottom:1px solid #e5e7eb;font-weight:600;">⚙️ System Issues</h3>`;
+    // systemIssues.forEach(item => {
+    //     const v = item.violation, exp = item.explanation;
+    //     html += `<details style="background:rgba(108, 117, 125, 0.04);padding:16px;margin:16px 0;border-left:4px solid #6c757d;border-radius:6px;opacity:0.85;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    //     <summary style="cursor:pointer;font-size:15px;font-weight:600;color:#495057;">${exp.title}</summary>
+    //     <div style="margin-top:14px;font-size:15px;line-height:1.6;color:#4a5568;"><p style="margin-bottom:12px;">${exp.plain}</p>
+    //         <div style="background:#f3f4f6;padding:12px;border-radius:6px;font-size:14px;color:#333;border:1px solid #e5e7eb;">${exp.howToFix}</div>
+    //     </div>
+    //     </details>`;
+    // });
+    // html += `</div>`;
+    // }
 
-    document.getElementById("a11y-results").innerHTML = html;
+    document.getElementById("a11y-results").innerHTML = html + getFooterHTML();
 
     // NOW attach the click handlers using the index
     setTimeout(() => {
