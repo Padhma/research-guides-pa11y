@@ -387,11 +387,11 @@
     const newWindowLinks = Array.from(container.querySelectorAll('a[target="_blank"]')).filter(link => {
       const text = link.textContent.trim().toLowerCase();
 
-      // DEBUG
-      console.log('Checking link:', link.href);
-      console.log('Text content:', text);
-      console.log('Includes "opens in"?', text.includes('opens in'));
-      console.log('Includes "new window"?', text.includes('new window'));
+      // // DEBUG
+      // console.log('Checking link:', link.href);
+      // console.log('Text content:', text);
+      // console.log('Includes "opens in"?', text.includes('opens in'));
+      // console.log('Includes "new window"?', text.includes('new window'));
 
       const hasWarning = text.includes('new window') || text.includes('new tab') || text.includes('opens in') || text.includes('external') || text.includes('external link');
       const hasAriaLabel = link.hasAttribute('aria-label') && link.getAttribute('aria-label').toLowerCase().includes('new window');
@@ -406,12 +406,12 @@
       return !hasWarning && !hasAriaLabel && !hasTitle && !hasIcon;
     });
     if(newWindowLinks.length) {
-      console.log('=== All new window links flagged ===');
-      newWindowLinks.forEach((link, i) => {
-          console.log(`${i + 1}. ${link.href}`);
-          console.log(`   Text: ${link.textContent.trim()}`);
-          console.log(`   Selector: ${getCssSelector(link, true)}`);
-      });
+      // console.log('=== All new window links flagged ===');
+      // newWindowLinks.forEach((link, i) => {
+      //     // console.log(`${i + 1}. ${link.href}`);
+      //     // console.log(`   Text: ${link.textContent.trim()}`);
+      //     // console.log(`   Selector: ${getCssSelector(link, true)}`);
+      // });
       violations.push({id:'link-new-window', impact:'moderate', help:'Links Open in New Window Without Warning', description:'Links that open in new windows should inform users.', nodes:newWindowLinks.map(el=>({element:el, target:[generateBetterSelector(el)], html:el.outerHTML.substring(0,150)}))});
     }
       
@@ -656,12 +656,23 @@
         const html = await response.text();
         const doc = new DOMParser().parseFromString(html, 'text/html');
         const container = doc.querySelector('#s-lg-guide-main') || doc.querySelector('#s-lg-content') || doc.body;
+        const adminElements = container.querySelectorAll('.s-lg-content-edit, .s-lg-box-edit, .s-lib-box-edit, [id*="admin-edit"], .dropdown-toggle');
+        adminElements.forEach(el => el.remove()); // Use .remove() since it's a virtual doc
         
         let axeResults = { violations: [] };
         try {
           await new Promise(r => setTimeout(r, Math.random() * 100));
           axeResults = await axe.run(container, {runOnly: ['wcag2a', 'wcag2aa', 'best-practice'], resultTypes: ['violations']});
-          axeResults.violations = axeResults.violations.filter(v => v.id !== 'empty-heading' && v.id !== 'image-alt' && v.id !== 'frame-title' && v.id !== 'page-has-heading-one');
+          axeResults.violations = axeResults.violations.filter(v => 
+            v.id !== 'empty-heading' 
+            && v.id !== 'heading-order'
+            && v.id !== 'duplicate-id' 
+            && v.id !== 'scope-attr-valid'
+            && v.id !== 'image-alt'
+            && v.id !== 'frame-title'
+            && v.id !== 'th-has-data-cells'
+            && v.id !== 'label-content-name-mismatch' 
+            && v.id !== 'page-has-heading-one');
         } catch (axeError) {console.warn('Axe error on', pages[i].url);}
         
         results.push({page: pages[i], violations: [...axeResults.violations, ...runCustomChecks(container)]});
@@ -685,7 +696,7 @@
       document.head.appendChild(style);
     }
     const sidebar = document.createElement('div');
-    const TOOL_VERSION = "V1.1.0";
+    const TOOL_VERSION = "V2.0.0";
     sidebar.id = 'a11y-overlay';
     sidebar.style.cssText = `position:fixed;top:0;right:0;bottom:0;width:450px;background:white;z-index:999999;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,0.3);font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:slideIn 0.3s ease-out;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);`;
     sidebar.innerHTML = `
