@@ -385,15 +385,36 @@
 
     // Links that open in new window without warning
     const newWindowLinks = Array.from(container.querySelectorAll('a[target="_blank"]')).filter(link => {
-      const text = link.textContent.toLowerCase();
-      const hasWarning = text.includes('new window') || text.includes('new tab') || text.includes('opens in');
+      const text = link.textContent.trim().toLowerCase();
+
+      // DEBUG
+      console.log('Checking link:', link.href);
+      console.log('Text content:', text);
+      console.log('Includes "opens in"?', text.includes('opens in'));
+      console.log('Includes "new window"?', text.includes('new window'));
+
+      const hasWarning = text.includes('new window') || text.includes('new tab') || text.includes('opens in') || text.includes('external') || text.includes('external link');
       const hasAriaLabel = link.hasAttribute('aria-label') && link.getAttribute('aria-label').toLowerCase().includes('new window');
       const hasTitle = link.hasAttribute('title') && link.getAttribute('title').toLowerCase('new window');
       const hasIcon = link.querySelector('[class*="external"], [class*=new-window], .fa-external-link');
+
+      if (link.getAttribute('target') === '') {
+        const hasNewWindowClick = link.hasAttribute('onclick') && (link.hasAttribute('onclick').includes('window.open') || link.getAttribute('onclick').includes('_blank'));
+        if (!hasNewWindowClick) return false; // Skip if there is no evidence it opens in a new window
+      }
+
       return !hasWarning && !hasAriaLabel && !hasTitle && !hasIcon;
     });
-    if(newWindowLinks.length) violations.push({id:'link-new-window', impact:'moderate', help:'Links Open in New Window Without Warning', description:'Links that open in new windows should inform users.', nodes:newWindowLinks.map(el=>({target:[getCssSelector(el, true)], html:el.outerHTML.substring(0,150)}))});
-
+    if(newWindowLinks.length) {
+      console.log('=== All new window links flagged ===');
+      newWindowLinks.forEach((link, i) => {
+          console.log(`${i + 1}. ${link.href}`);
+          console.log(`   Text: ${link.textContent.trim()}`);
+          console.log(`   Selector: ${getCssSelector(link, true)}`);
+      });
+      violations.push({id:'link-new-window', impact:'moderate', help:'Links Open in New Window Without Warning', description:'Links that open in new windows should inform users.', nodes:newWindowLinks.map(el=>({element:el, target:[generateBetterSelector(el)], html:el.outerHTML.substring(0,150)}))});
+    }
+      
     // Duplicate iframe names
     const iframeNames = {};
     Array.from(container.querySelectorAll('iframe[name]')).forEach(iframe => {
@@ -664,7 +685,7 @@
       document.head.appendChild(style);
     }
     const sidebar = document.createElement('div');
-    const TOOL_VERSION = "V2.0.0";
+    const TOOL_VERSION = "V1.1.0";
     sidebar.id = 'a11y-overlay';
     sidebar.style.cssText = `position:fixed;top:0;right:0;bottom:0;width:450px;background:white;z-index:999999;display:flex;flex-direction:column;box-shadow:-4px 0 20px rgba(0,0,0,0.3);font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;animation:slideIn 0.3s ease-out;transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);`;
     sidebar.innerHTML = `
@@ -893,6 +914,10 @@
   }
 
   function generateBetterSelector(element) {
+    if (element.tagName === 'A' && element.href) {
+      return `a[href="${element.getAttribute('href')}"]`;
+    }
+
     // Start with the most specific: if it has a unique ID, use it
     if (element.id && document.querySelectorAll(`#${element.id}`).length === 1) {
         return `#${element.id}`;
