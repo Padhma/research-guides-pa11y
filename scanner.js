@@ -193,32 +193,45 @@
     return {title:'Accessibility Issue', plain:'This element has an accessibility problem.', howToFix:'Review the technical description below for details.', priority:'important', canFix:true};
   }
 
-  function highlightAllElements(selectors){
-    document.querySelectorAll('.a11y-highlight').forEach(el=>el.classList.remove('a11y-highlight'));
-    if(!document.getElementById('a11y-highlight-style')){
-      const style=document.createElement('style');
-      style.id='a11y-highlight-style';
-      style.textContent=`.a11y-highlight {outline: 4px solid #ffcb05 !important;outline-offset: 2px !important;background: rgba(255, 203, 5, 0.1) !important;scroll-margin: 100px;}`;
-      document.head.appendChild(style);
+    function getVisibleTarget(el) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 || rect.height > 0) return el;
+    
+    const parent = el.closest('p, div, li, td, h1, h2, h3, h4, h5, h6');
+    return (parent && !parent.closest('#a11y-overlay')) ? parent : null;
     }
+
+    function highlightAllElements(selectors) {
+    document.querySelectorAll('.a11y-highlight').forEach(el => el.classList.remove('a11y-highlight'));
+
+    if (!document.getElementById('a11y-highlight-style')) {
+        const style = document.createElement('style');
+        style.id = 'a11y-highlight-style';
+        style.textContent = `.a11y-highlight {outline: 4px solid #ffcb05 !important;outline-offset: 2px !important;background: rgba(255, 203, 5, 0.1) !important;scroll-margin: 100px;}`;
+        document.head.appendChild(style);
+    }
+
     let successCount = 0;
 
     selectors.forEach(selector => {
-      try {
+        try {
         document.querySelectorAll(selector).forEach(el => {
-          if(el && !el.closest('#a11y-overlay')){
-            el.classList.add('a11y-highlight');
+            if (!el || el.closest('#a11y-overlay')) return;
+
+            const target = getVisibleTarget(el);
+            if (!target) return;
+
+            target.classList.add('a11y-highlight');
+            if (successCount === 0) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
             successCount++;
-            if(successCount === 1) el.scrollIntoView({behavior:'smooth', block:'center'});
-          }
         });
-      } catch(e) {
-          console.warn('Invalid selector:', selector, e);
-      }
+        } catch (e) {
+        // Invalid selector, skip
+        }
     });
 
     return successCount > 0;
-}
+    }
 
   function getCssSelector(el, skipId = false){
     // If skipId is true, don't use the ID even if it exists (for duplicate IDs)
@@ -386,14 +399,11 @@
     // Links that open in new window without warning
     const newWindowLinks = Array.from(container.querySelectorAll('a[target="_blank"]')).filter(link => {
       const text = link.textContent.trim().toLowerCase();
-
-      // // DEBUG
-      // console.log('Checking link:', link.href);
-      // console.log('Text content:', text);
-      // console.log('Includes "opens in"?', text.includes('opens in'));
-      // console.log('Includes "new window"?', text.includes('new window'));
-
-      const hasWarning = text.includes('new window') || text.includes('new tab') || text.includes('opens in') || text.includes('external') || text.includes('external link');
+      const imgAlt = Array.from(link.querySelectorAll('img'))
+                    .map(img => img.alt.trim().toLowerCase())
+                    .join(' ');
+      const fullLabel = `${text} ${imgAlt}`;
+      const hasWarning = fullLabel.includes('new window') || fullLabel.includes('new tab') || fullLabel.includes('opens in') || fullLabel.includes('external') || fullLabel.includes('external link');
       const hasAriaLabel = link.hasAttribute('aria-label') && link.getAttribute('aria-label').toLowerCase().includes('new window');
       const hasTitle = link.hasAttribute('title') && link.getAttribute('title').toLowerCase('new window');
       const hasIcon = link.querySelector('[class*="external"], [class*=new-window], .fa-external-link');
@@ -406,12 +416,6 @@
       return !hasWarning && !hasAriaLabel && !hasTitle && !hasIcon;
     });
     if(newWindowLinks.length) {
-      // console.log('=== All new window links flagged ===');
-      // newWindowLinks.forEach((link, i) => {
-      //     // console.log(`${i + 1}. ${link.href}`);
-      //     // console.log(`   Text: ${link.textContent.trim()}`);
-      //     // console.log(`   Selector: ${getCssSelector(link, true)}`);
-      // });
       violations.push({id:'link-new-window', impact:'moderate', help:'Links Open in New Window Without Warning', description:'Links that open in new windows should inform users.', nodes:newWindowLinks.map(el=>({element:el, target:[generateBetterSelector(el)], html:el.outerHTML.substring(0,150)}))});
     }
       
